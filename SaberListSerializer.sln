@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SaberListSerializer", "SaberListSerializer\SaberListSerializer.csproj", "{6AB91304-B522-45DB-920F-016AA1FB0908}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{D792ACE1-72FD-481D-9479-B9C3D715E61A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks", "Benchmarks\Benchmarks.csproj", "{E13BAA1F-D4C8-440D-8A9D-332803236C69}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6AB91304-B522-45DB-920F-016AA1FB0908}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AB91304-B522-45DB-920F-016AA1FB0908}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AB91304-B522-45DB-920F-016AA1FB0908}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AB91304-B522-45DB-920F-016AA1FB0908}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D792ACE1-72FD-481D-9479-B9C3D715E61A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D792ACE1-72FD-481D-9479-B9C3D715E61A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D792ACE1-72FD-481D-9479-B9C3D715E61A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D792ACE1-72FD-481D-9479-B9C3D715E61A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E13BAA1F-D4C8-440D-8A9D-332803236C69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E13BAA1F-D4C8-440D-8A9D-332803236C69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E13BAA1F-D4C8-440D-8A9D-332803236C69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E13BAA1F-D4C8-440D-8A9D-332803236C69}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
