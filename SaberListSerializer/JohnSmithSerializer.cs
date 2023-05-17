@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Text;
 using SerializerTests.Interfaces;
 using SerializerTests.Nodes;
@@ -59,33 +60,61 @@ namespace SerializerTests.Implementations
             return Task.FromResult(oldNewNodeDict.First().Value);
         }
         
-        public Task<ListNode> Deserialize(Stream s)
+        public async Task<ListNode> Deserialize(Stream s)
         {
             var nodeIndexDict = new Dictionary<int, ListNode>();
             var randomIndexesList = new List<int>();
             var index = 0;
 
-            using var br = new BinaryReader(s, Encoding.UTF8, true);
-            while (br.BaseStream.Position != br.BaseStream.Length)
+            var intBuffer = new byte[4];
+            while (true)
             {
-                var random = br.ReadInt32();
-                var data = br.ReadString();
-
-                var node = new ListNode()
+                var isEmpty = await ReadDataFromStream(4, intBuffer, s);
+                if (isEmpty)
                 {
-                    Data = data,
-                };
+                    break;
+                }
+                
+                var random = BitConverter.ToInt32(intBuffer);
+                
+                isEmpty = await ReadDataFromStream(4, intBuffer, s);
+                if (isEmpty)
+                {
+                    break;
+                }
+                
+                var dataLength = BitConverter.ToInt32(intBuffer);
 
-                nodeIndexDict.Add(index, node);
-                randomIndexesList.Add(random);
-                index++;
+                var dataBuffer = ArrayPool<byte>.Shared.Rent(dataLength);
+                try
+                {
+                    isEmpty = await ReadDataFromStream(dataLength, dataBuffer, s);
+                    var data = Encoding.UTF8.GetString(dataBuffer.AsSpan(0, dataLength));
+                    var node = new ListNode()
+                    {
+                        Data = data,
+                    };
+
+                    nodeIndexDict.Add(index, node);
+                    randomIndexesList.Add(random);
+                    index++;
+
+                    if (isEmpty)
+                    {
+                        break;
+                    }
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(dataBuffer);
+                }
             }
-
+            
             if (!randomIndexesList.Any())
                 return null;
 
             if (randomIndexesList.Count == 1)
-                return Task.FromResult(nodeIndexDict.Values.First());
+                return nodeIndexDict.Values.First();
 
             for (var i = 0; i < randomIndexesList.Count; i++)
             {
@@ -101,20 +130,67 @@ namespace SerializerTests.Implementations
                     node.Previous = nodeIndexDict[i - 1];
             }
             
-            return Task.FromResult(nodeIndexDict.Values.First());
+            return nodeIndexDict.Values.First();
         }
 
         public async Task Serialize(ListNode head, Stream s)
         {
             var nodeIndexDict = GetNodeIndexDictionary(head);
-            await using var bw = new BinaryWriter(s, Encoding.UTF8, true);
+            var intBuffer = new byte[4];
             while (head != null)
             {
                 var randomIndex = head.Random == null ? -1 : nodeIndexDict[head.Random];
-                bw.Write(randomIndex);
-                bw.Write(head.Data);
+                await WriteDataToStream(randomIndex, intBuffer, s);
+                await WriteDataToStream(head.Data.Length, intBuffer, s);
+                await WriteDataToStream(head.Data, s);
                 head = head.Next;
             }
+        }
+        
+        private static async Task WriteDataToStream(string data, Stream stream)
+        {
+            var buffer = ArrayPool<byte>.Shared.Rent(data.Length);
+            try
+            {
+                for (var i = 0; i < data.Length; i++)
+                {
+                    buffer[i] = (byte) data[i];
+                }
+                await stream.WriteAsync(buffer.AsMemory(0, data.Length));
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
+        
+        private static async Task WriteDataToStream(int data, byte[] buffer, Stream stream)
+        {
+            buffer[0] = (byte)data;
+            buffer[1] = (byte)(((uint)data >> 8) & 0xFF);
+            buffer[2] = (byte)(((uint)data >> 16) & 0xFF);
+            buffer[3] = (byte)(((uint)data >> 24) & 0xFF);
+
+            await stream.WriteAsync(buffer);
+        }
+        
+        private static async Task<bool> ReadDataFromStream(int bytesCount, byte[] buffer, Stream stream)
+        {
+            var bytesRead = 0;
+            while (bytesRead < bytesCount)
+            {
+                var count = await stream.ReadAsync(buffer.AsMemory(bytesRead, bytesCount - bytesRead));
+                bytesRead += count;
+                if (count != 0) 
+                    continue;
+                
+                if (bytesRead != 0 && bytesRead < bytesCount)
+                    throw new InvalidOperationException("Недостаточно данных в стриме");
+
+                return true;
+            }
+
+            return false;
         }
         
         private static Dictionary<ListNode, int> GetNodeIndexDictionary(ListNode head)
